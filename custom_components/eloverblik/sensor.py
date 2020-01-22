@@ -8,6 +8,8 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'eloverblik'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=60)
+
+
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up the sensor platform."""
     eloverblik = hass.data[DOMAIN][config.entry_id]
@@ -22,6 +24,7 @@ class EloverblikEnergy(Entity):
     def __init__(self, eloverblik, metering_point):
         """Initialize the sensor."""
         self._state = None
+        self._data = None
         self._eloverblik = eloverblik
         self._metering_point = metering_point
 
@@ -36,6 +39,18 @@ class EloverblikEnergy(Entity):
         return self._state
 
     @property
+    def device_state_attributes(self):
+        """Return state attributes."""
+        attributes = dict()
+        if self._data:
+            for key, value in self._data.items():
+                _LOGGER.debug(f"Key: {key}, Value: {value}.")
+                attributes[key] = value
+
+        return attributes
+
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return ENERGY_KILO_WATT_HOUR
@@ -48,13 +63,12 @@ class EloverblikEnergy(Entity):
         """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
 
-        usage = self._eloverblik.getYesterDayNiceFormat(self._metering_point)
+        self._data = self._eloverblik.getYesterDayNiceFormat(self._metering_point)
         
 
-        _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
         total = 0
-        for value in usage.values():
+        for value in self._data.values():
             total += float(value)
-
+        _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
 
         self._state = total
