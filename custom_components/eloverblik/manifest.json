@@ -1,0 +1,16 @@
+{
+  "domain": "eloverblik",
+  "name": "Eloverblik",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/eloverblik",
+  "requirements": [
+    "pyeloverblik==0.0.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@JonasPed"
+  ]
+}

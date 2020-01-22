@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "refresh_token": "Refresh Token",
+                    "metering_point": "Metering Point"
+                },
+                "title": "Enter refresh token and metering point"
+            }
+        },
+        "title": "Eloverblik"
+    }
+}
