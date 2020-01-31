@@ -12,22 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({"refresh_token": str, "metering_point": str})
 
 
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, refresh_token, metering_point):
-        """Initialize."""
-        self.refresh_token = refresh_token
-        self.metering_point = metering_point
-
-    async def authenticate(self, username, password) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
-
-
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
@@ -53,14 +37,15 @@ async def validate_input(hass: core.HomeAssistant, data):
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    metering_point = data["metering_point"]
+    return {"title": f"Eloverblik {metering_point}"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Eloverblik."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
+    
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
@@ -69,7 +54,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 #info = await validate_input(self.hass, user_input)
-                info = "Eloverblik" # TODO FIX FIX
+                metering_point = user_input["metering_point"]
+                info = f"Eloverblik {metering_point}"
                 return self.async_create_entry(title=info, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"

@@ -1,4 +1,4 @@
-"""Platform for sensor integration."""
+"""Platform for Eloverblik sensor integration."""
 import logging
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
@@ -6,7 +6,8 @@ from datetime import timedelta
 from pyeloverblik.eloverblik import Eloverblik
 from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'eloverblik'
+from .const import DOMAIN
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=60)
 
 
@@ -65,7 +66,6 @@ class EloverblikEnergy(Entity):
 
         self._data = self._eloverblik.getYesterDayNiceFormat(self._metering_point)
         
-
         total = 0
         for value in self._data.values():
             total += float(value)
