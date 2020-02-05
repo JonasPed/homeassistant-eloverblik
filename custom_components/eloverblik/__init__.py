@@ -68,13 +68,13 @@ class HassEloverblik:
 
     def get_total_day(self):
         if self._data != None:
-            return self._data.get_total_metering_data()
+            return round(self._data.get_total_metering_data(), 3)
         else:
             return None
 
     def get_usage_hour(self, hour):
         if self._data != None:
-            return self._data.get_metering_data(hour)
+            return round(self._data.get_metering_data(hour), 3)
         else:
             return None
 
