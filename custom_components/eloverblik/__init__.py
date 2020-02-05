@@ -64,20 +64,33 @@ class HassEloverblik:
         self._client = Eloverblik(refresh_token)
         self._metering_point = metering_point
 
+        self._data = None
+
     def get_total_day(self):
-        return self._data.get_total_metering_data()
+        if self._data != None:
+            return self._data.get_total_metering_data()
+        else:
+            return None
 
     def get_usage_hour(self, hour):
-        return self._data.get_metering_data(hour)
+        if self._data != None:
+            return self._data.get_metering_data(hour)
+        else:
+            return None
 
     def get_data_date(self):
-        return self._data.data_date
+        if self._data != None:
+            return self._data.data_date
+        else:
+            return None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
 
-        self._data = self._client.get_yesterday_parsed(self._metering_point)
+        data = self._client.get_yesterday_parsed(self._metering_point)
+        if data.status == 200:
+            self._data = data
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
 
