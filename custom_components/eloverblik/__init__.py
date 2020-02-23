@@ -86,11 +86,11 @@ class HassEloverblik:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        _LOGGER.debug("Fetching data from Danfoss Air CCM module")
+        _LOGGER.debug("Fetching data from Eloverblik")
 
         data = self._client.get_yesterday_parsed(self._metering_point)
         if data.status == 200:
             self._data = data
 
-        _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
+        _LOGGER.debug("Done fetching data from Eloverblik")
 
