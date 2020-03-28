@@ -16,7 +16,7 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     sensors = []
     sensors.append(EloverblikEnergy("Eloverblik Energy Total", 'total', eloverblik))
-    for x in range(1, 24):
+    for x in range(1, 25):
         sensors.append(EloverblikEnergy(f"Eloverblik Energy {x-1}-{x}", 'hour', eloverblik, x))
     async_add_entities(sensors)
 
@@ -33,10 +33,21 @@ class EloverblikEnergy(Entity):
         self._name = name
         self._sensor_type = sensor_type
 
+        if sensor_type == 'hour':
+            self._unique_id = f"{self._data.get_metering_point()}-{hour}"
+        else:
+            self._unique_id = f"{self._data.get_metering_point()}-total"
+
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """The unique id of the sensor."""
+        print(f"uniq: {self._unique_id}")
+        return self._unique_id
 
     @property
     def state(self):

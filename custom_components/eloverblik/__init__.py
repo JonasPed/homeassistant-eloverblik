@@ -84,6 +84,9 @@ class HassEloverblik:
         else:
             return None
 
+    def get_metering_point(self):
+        return self._metering_point
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         _LOGGER.debug("Fetching data from Eloverblik")
