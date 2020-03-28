@@ -68,3 +68,4 @@ class EloverblikEnergy(Entity):
             self._state = self._data.get_total_day()
         else:
             self._state = self._data.get_usage_hour(self._hour)
+
