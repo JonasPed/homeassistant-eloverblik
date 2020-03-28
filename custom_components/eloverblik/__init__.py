@@ -77,7 +77,7 @@ class HassEloverblik:
     def update(self):
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
 
-        self._data = self._client.get_yesterday_parsed(self._metering_point)
+        self._data = self._client.get_latest(self._metering_point)
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
 
