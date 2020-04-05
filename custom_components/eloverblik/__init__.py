@@ -1,6 +1,7 @@
 """The Eloverblik integration."""
 import asyncio
 import logging
+import sys
 
 import voluptuous as vol
 from homeassistant.util import Throttle
@@ -91,9 +92,15 @@ class HassEloverblik:
     def update(self):
         _LOGGER.debug("Fetching data from Eloverblik")
 
-        data = self._client.get_latest(self._metering_point)
-        if data.status == 200:
-            self._data = data
+        try: 
+            data = self._client.get_latest(self._metering_point)
+            if data.status == 200:
+                self._data = data
+            else:
+                _LOGGER.warn(f"Error from eloverblik: {data.status} - {data.detailed_status}")
+        except: 
+            e = sys.exc_info()[0]
+            _LOGGER.warn(f"Exception: {e}")
 
         _LOGGER.debug("Done fetching data from Eloverblik")
 
