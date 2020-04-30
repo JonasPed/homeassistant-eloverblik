@@ -46,7 +46,6 @@ class EloverblikEnergy(Entity):
     @property
     def unique_id(self):
         """The unique id of the sensor."""
-        print(f"uniq: {self._unique_id}")
         return self._unique_id
 
     @property
