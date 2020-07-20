@@ -47,3 +47,57 @@ All sensors show their value in kWh.
 
 ## Disclaimer
 Very early development and stuff might still explode etc.
+
+## Examples
+
+### Daily average and gauge bar indicating high usage
+Below example is an example how to display daily average and a guage indicating high usage. 
+
+![alt text](images/example1.png "Gauge Example")
+
+
+**Requirements**
+
+* Recorder component holding minimum the number of days the average display should cover.
+* Lovelace Config Template Card (https://github.com/iantrich/config-template-card)
+
+**Average sensor**
+
+Below statistics sensor shows the daily average calculated over the last 30 days. 
+```
+sensor:
+  - platform: statistics
+    entity_id: sensor.eloverblik_energy_total
+    name: Eloverblik Monthly Statistics
+    sampling_size: 50
+    max_age:
+        days: 30
+
+```
+
+**Lovelace**
+
+```
+type: vertical-stack
+cards:
+  - card:
+      entity: sensor.eloverblik_energy_total
+      max: 20
+      min: 0
+      name: >-
+        ${'Strømforbrug d. ' +
+        states['sensor.eloverblik_energy_total'].attributes.metering_date }
+      severity:
+        green: 0
+        red: '${states[''sensor.eloverblik_monthly_statistics''].state * 1.25}'
+        yellow: '${states[''sensor.eloverblik_monthly_statistics''].state * 1.10}'
+      type: gauge
+    entities:
+      - sensor.eloverblik_energy_total
+      - sensor.eloverblik_monthly_statistics
+    type: 'custom:config-template-card'
+  - type: entity
+    entity: sensor.eloverblik_monthly_statistics
+    name: Daglig gennemsnit
+
+```
