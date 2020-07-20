@@ -58,6 +58,7 @@ class EloverblikEnergy(Entity):
         """Return state attributes."""
         attributes = dict()
         attributes['Metering date'] = self._data_date
+        attributes['metering_date'] = self._data_date
         
         return attributes
 
