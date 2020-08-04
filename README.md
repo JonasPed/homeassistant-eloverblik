@@ -45,8 +45,14 @@ A sensor which sum up the total energy usage is added as well:
 
 All sensors show their value in kWh.
 
-## Disclaimer
-Very early development and stuff might still explode etc.
+## Debugging
+It is possible to debug log the raw response from eloverblik.dk API. This is done by setting up logging like below in configuration.yaml in Home Assistant. It is also possible to set the log level through a service call in UI.  
+```
+logger: 
+  default: info
+  logs: 
+    pyeloverblik.eloverblik: debug
+```
 
 ## Examples
 
