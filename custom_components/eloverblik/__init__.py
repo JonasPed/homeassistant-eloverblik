@@ -14,6 +14,8 @@ from pyeloverblik.eloverblik import Eloverblik
 
 from .const import DOMAIN
 
+import requests
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -98,6 +100,14 @@ class HassEloverblik:
                 self._data = data
             else:
                 _LOGGER.warn(f"Error from eloverblik: {data.status} - {data.detailed_status}")
+        except requests.exceptions.HTTPError as he:
+            message = None
+            if he.response.status_code == 401:
+                message = f"Unauthorized error while accessing eloverblik.dk. Wrong or expired refresh token?"
+            else:
+                message = f"Exception: {e}"
+
+            _LOGGER.warn(message)
         except: 
             e = sys.exc_info()[0]
             _LOGGER.warn(f"Exception: {e}")
