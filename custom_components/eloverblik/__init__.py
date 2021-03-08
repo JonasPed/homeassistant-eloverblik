@@ -78,7 +78,7 @@ class HassEloverblik:
     def get_usage_hour(self, hour):
         if self._data != None:
             try:
-                return round(self._data.get_metering_data(hour+1), 3)
+                return round(self._data.get_metering_data(hour), 3)
             except IndexError:
                 self._data.get_metering_data(23)
                 _LOGGER.info(f"Unable to get data for hour {hour}. If siwtch to daylight saving day this is not an error.")
