@@ -107,3 +107,20 @@ cards:
     name: Daglig gennemsnit
 
 ```
+
+### Long term statistics / Energy dashboard
+
+The sensors does not support long term statistics or the energy dashboard out the box. The reason for this is that only sensors with measurements in present time should support this. This is described in official Home Assistant guide lines on [https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics](https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics).  Eloverblik sensor data is at least one or two days old and that can not be changed as this is what is delivered from eloverblik.dk. What would happen, if this was supported, is that statistics card or energy dashboard will show the data on the wrong date. 
+
+If you insist on adding support for long term statistics you can create an template sensor like below. 
+```
+template: 
+  - sensor: 
+    - name: "Eloverblik Long Term Statistics"
+      unit_of_measurement: kWh
+      state: "{{ states('sensor.eloverblik_energy_total') }}"
+      attributes: 
+        device_class: energy
+        state_class: measurement
+        last_reset: "{{ state_attr('sensor.eloverblik_energy_total', 'metering_date') }}"
+```
