@@ -17,7 +17,7 @@ The `eloverblik`component is a Home Assistant custom component for monitoring yo
 ### Installation with HACS (Home Assistant Community Store)
 
   1. Ensure that [HACS](https://hacs.xyz/) is installed.
-  2. Search for and install the `eloverblik` integration.
+  2. Search for and install the `eloverblik` integration through HACS.
   3. Restart Home Assistant. 
   4. Configure Eloverblik through Configuration -> Integrations -> Add Integration.
 
