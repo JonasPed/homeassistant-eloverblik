@@ -7,28 +7,27 @@ The `eloverblik`component is a Home Assistant custom component for monitoring yo
 *The custom component in it's very early stage for showing data from eloverblik.dk.*
 
 ## Installation
----
+
 ### Manual Installation
+
   1. Copy eloverblik folder into your custom_components folder in your hass configuration directory.
-  2. Confiure the `eloverblik` sensor.
-  3. Restart Home Assistant.
+  2. Restart Home Assistant.
+  3. Configure Eloverblik through Configuration -> Integrations -> Add Integration.
 
 ### Installation with HACS (Home Assistant Community Store)
+
   1. Ensure that [HACS](https://hacs.xyz/) is installed.
   2. Search for and install the `eloverblik` integration.
-  3. Confiure the `eloverblik` sensor.
-  4. Restart Home Assistant.
+  3. Restart Home Assistant. 
+  4. Configure Eloverblik through Configuration -> Integrations -> Add Integration.
 
 
 ## Configuration
----
-Fully configurable through config flow.
-  1. Head to configuration --> integration
-  2. Add new and search for eloverblik
-  3. enter refresh token and metering point.
 
 ### Refresh token and metering point
+
 Get refresh token and metering point from https://eloverblik.dk.
+
   1. Login at [eloverblik](https://eloverblik.dk).
   2. metering point is your `ID`
   3. refresh token can be created by clicking at you user and chose share data.
