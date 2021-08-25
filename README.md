@@ -109,9 +109,9 @@ cards:
 
 ### Long term statistics / Energy dashboard
 
-The sensors does not support long term statistics or the energy dashboard out the box. The reason for this is that only sensors with measurements in present time should support this. This is described in official Home Assistant guide lines on [https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics](https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics).  Eloverblik sensor data is at least one or two days old and that can not be changed as this is what is delivered from eloverblik.dk. What would happen, if this was supported, is that statistics card or energy dashboard will show the data on the wrong date. 
+The sensors does not support long term statistics or the energy dashboard out the box. The reason for this is that only sensors with measurements in present time should support this. This is described in official Home Assistant guide lines on [https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics](https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics).  Eloverblik sensor data is at least one or two days old and that can not be changed as this is what is delivered from eloverblik.dk. What would happen, if this was supported, is that statistics card or energy dashboard will show the data on the wrong date and most likely also show wrong data.
 
-If you insist on adding support for long term statistics you can create an template sensor like below. 
+If you insist on adding support for long term statistics you can create a template sensor like below. **You have been warned about data showing up on the wrong date and most likely the amount will also be wrong.**
 ```
 template: 
   - sensor: 
