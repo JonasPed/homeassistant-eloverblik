@@ -54,7 +54,7 @@ class EloverblikEnergy(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return state attributes."""
         attributes = dict()
         attributes['Metering date'] = self._data_date
