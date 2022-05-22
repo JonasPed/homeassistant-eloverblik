@@ -110,11 +110,12 @@ class HassEloverblik:
             if he.response.status_code == 401:
                 message = f"Unauthorized error while accessing eloverblik.dk. Wrong or expired refresh token?"
             else:
+                e = sys.exc_info()[1]
                 message = f"Exception: {e}"
 
             _LOGGER.warn(message)
         except: 
-            e = sys.exc_info()[0]
+            e = sys.exc_info()[1]
             _LOGGER.warn(f"Exception: {e}")
 
         _LOGGER.debug("Done fetching data from Eloverblik")
