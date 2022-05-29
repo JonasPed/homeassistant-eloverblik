@@ -1,6 +1,6 @@
 # eloverblik
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
 
 The `eloverblik`component is a Home Assistant custom component for monitoring your electricity data from eloverblik.dk
 
