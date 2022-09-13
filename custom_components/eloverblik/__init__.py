@@ -5,7 +5,7 @@ import sys
 
 import voluptuous as vol
 from homeassistant.util import Throttle
-from datetime import timedelta
+from datetime import timedelta, date
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -67,28 +67,35 @@ class HassEloverblik:
         self._client = Eloverblik(refresh_token)
         self._metering_point = metering_point
 
-        self._data = None
+        self._day_data = None
+        self._year_data = None
 
     def get_total_day(self):
-        if self._data != None:
-            return round(self._data.get_total_metering_data(), 3)
+        if self._day_data != None:
+            return round(self._day_data.get_total_metering_data(), 3)
+        else:
+            return None
+    
+    def get_total_year(self):
+        if self._day_data != None:
+            return round(self._year_data.get_total_metering_data(), 3)
         else:
             return None
 
     def get_usage_hour(self, hour):
-        if self._data != None:
+        if self._day_data != None:
             try:
-                return round(self._data.get_metering_data(hour), 3)
+                return round(self._day_data.get_metering_data(hour), 3)
             except IndexError:
-                self._data.get_metering_data(23)
+                self._day_data.get_metering_data(23)
                 _LOGGER.info(f"Unable to get data for hour {hour}. If siwtch to daylight saving day this is not an error.")
                 return 0
         else:
             return None
 
     def get_data_date(self):
-        if self._data != None:
-            return self._data.data_date.date().strftime('%Y-%m-%d')
+        if self._day_data != None:
+            return self._day_data.data_date.date().strftime('%Y-%m-%d')
         else:
             return None
 
@@ -100,11 +107,17 @@ class HassEloverblik:
         _LOGGER.debug("Fetching data from Eloverblik")
 
         try: 
-            data = self._client.get_latest(self._metering_point)
-            if data.status == 200:
-                self._data = data
+            day_data = self._client.get_latest(self._metering_point)
+            if day_data.status == 200:
+                self._day_data = day_data
             else:
-                _LOGGER.warn(f"Error from eloverblik: {data.status} - {data.detailed_status}")
+                _LOGGER.warn(f"Error from eloverblik when getting day data: {day_data.status} - {day_data.detailed_status}")
+
+            year_data = self._client.get_per_month(self._metering_point)
+            if year_data.status == 200:
+                self._year_data = year_data
+            else:
+                _LOGGER.warn(f"Error from eloverblik when getting year data: {year_data.status} - {year_data.detailed_status}")
         except requests.exceptions.HTTPError as he:
             message = None
             if he.response.status_code == 401:
