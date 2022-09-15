@@ -82,7 +82,7 @@ class EloverblikEnergy(Entity):
 
         if self._sensor_type == 'hour':
             self._state = self._data.get_usage_hour(self._hour)
-        if self._sensor_type == 'total':
+        elif self._sensor_type == 'total':
             self._state = self._data.get_total_day()
         elif self._sensor_type == 'year_total':
             self._state = self._data.get_total_year()
