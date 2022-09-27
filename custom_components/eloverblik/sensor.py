@@ -16,6 +16,7 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     sensors = []
     sensors.append(EloverblikEnergy("Eloverblik Energy Total", 'total', eloverblik))
+    sensors.append(EloverblikEnergy("Eloverblik Energy Total (Year)", 'year_total', eloverblik))
     for x in range(1, 25):
         sensors.append(EloverblikEnergy(f"Eloverblik Energy {x-1}-{x}", 'hour', eloverblik, x))
     async_add_entities(sensors)
@@ -35,8 +36,12 @@ class EloverblikEnergy(Entity):
 
         if sensor_type == 'hour':
             self._unique_id = f"{self._data.get_metering_point()}-{hour}"
-        else:
+        elif sensor_type == 'total':
             self._unique_id = f"{self._data.get_metering_point()}-total"
+        elif sensor_type == 'year_total':
+            self._unique_id = f"{self._data.get_metering_point()}-year-total"
+        else:
+            raise ValueError(f"Unexpected sensor_type: {sensor_type}.")
 
     @property
     def name(self):
@@ -75,8 +80,11 @@ class EloverblikEnergy(Entity):
 
         self._data_date = self._data.get_data_date()
 
-        if self._sensor_type == 'total':
-            self._state = self._data.get_total_day()
-        else:
+        if self._sensor_type == 'hour':
             self._state = self._data.get_usage_hour(self._hour)
-
+        elif self._sensor_type == 'total':
+            self._state = self._data.get_total_day()
+        elif self._sensor_type == 'year_total':
+            self._state = self._data.get_total_year()
+        else:
+            raise ValueError(f"Unexpected sensor_type: {self._sensor_type}.")
