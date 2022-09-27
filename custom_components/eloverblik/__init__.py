@@ -77,7 +77,7 @@ class HassEloverblik:
             return None
     
     def get_total_year(self):
-        if self._day_data != None:
+        if self._year_data != None:
             return round(self._year_data.get_total_metering_data(), 3)
         else:
             return None
