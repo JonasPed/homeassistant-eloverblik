@@ -121,7 +121,9 @@ class EloverblikTariff(Entity):
     @property
     def extra_state_attributes(self):
         """Return state attributes."""
-        attributes = {f"hour_{i}": self._data_hourly_tariff_sums[i] for i in range(24)}
+        attributes = {
+            "hourly": [self._data_hourly_tariff_sums[i] for i in range(24)]
+        }
         
         return attributes
 
