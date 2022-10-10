@@ -144,7 +144,7 @@ template:
           {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool', 'today') %}
             {% set ns = namespace (prices=[]) %}
             {% for h in range(24) %}
-              {% set ns.prices = ns.prices + [(float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'today')[h])) | round(5)] %}
+              {% set ns.prices = ns.prices + [(1.25 * float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'today')[h])) | round(5)] %}
             {% endfor %}
             {{ ns.prices }}
           {% endif %}
@@ -152,7 +152,7 @@ template:
           {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool', 'tomorrow') %}
             {% set ns = namespace (prices=[]) %}
             {% for h in range(24) %}
-              {% set ns.prices = ns.prices + [(float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'tomorrow')[h])) | round(5)] %}
+              {% set ns.prices = ns.prices + [(1.25 * float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'tomorrow')[h])) | round(5)] %}
             {% endfor %}
             {{ ns.prices }}
           {% endif %}
