@@ -69,6 +69,7 @@ class HassEloverblik:
 
         self._day_data = None
         self._year_data = None
+        self._tariff_data = None
 
     def get_total_day(self):
         if self._day_data != None:
@@ -102,9 +103,26 @@ class HassEloverblik:
     def get_metering_point(self):
         return self._metering_point
 
+    def get_tariff_sum_hour(self, hour):
+        if self._tariff_data != None:
+            sum = 0.0
+            for tariff in self._tariff_data.charges.values():
+                if isinstance(tariff, list):
+                    if len(tariff) == 24:
+                        sum += tariff[hour - 1]
+                    else:
+                        _LOGGER.warning(f"Unexpected length of tariff array ({len(tariff)}), expected 24 entries.")
+                else:
+                    sum += float(tariff)
+
+            return sum
+
+        else:
+            return None
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        _LOGGER.debug("Fetching data from Eloverblik")
+    def update_energy(self):
+        _LOGGER.debug("Fetching energy data from Eloverblik")
 
         try: 
             day_data = self._client.get_latest(self._metering_point)
@@ -131,5 +149,29 @@ class HassEloverblik:
             e = sys.exc_info()[1]
             _LOGGER.warn(f"Exception: {e}")
 
-        _LOGGER.debug("Done fetching data from Eloverblik")
+        _LOGGER.debug("Done fetching energy data from Eloverblik")
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_tariffs(self):
+        _LOGGER.debug("Fetching tariff data from Eloverblik")
+
+        try: 
+            tariff_data = self._client.get_tariffs(self._metering_point)
+            if tariff_data.status == 200:
+                self._tariff_data = tariff_data
+            else:
+                _LOGGER.warn(f"Error from eloverblik when getting tariff data: {tariff_data.status} - {tariff_data.detailed_status}")
+        except requests.exceptions.HTTPError as he:
+            message = None
+            if he.response.status_code == 401:
+                message = f"Unauthorized error while accessing eloverblik.dk. Wrong or expired refresh token?"
+            else:
+                e = sys.exc_info()[1]
+                message = f"Exception: {e}"
+
+            _LOGGER.warn(message)
+        except: 
+            e = sys.exc_info()[1]
+            _LOGGER.warn(f"Exception: {e}")
+
+        _LOGGER.debug("Done fetching tariff data from Eloverblik")

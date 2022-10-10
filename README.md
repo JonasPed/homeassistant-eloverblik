@@ -123,3 +123,39 @@ template:
         state_class: measurement
         last_reset: "{{ state_attr('sensor.eloverblik_energy_total', 'metering_date') }}"
 ```
+
+### Forecast total kWh price with Nordpool integration
+
+If you have the [Nordpool](https://github.com/custom-components/nordpool) installed you can calculate the current electricity price and forecast the price for today and tomorrow by the hour. These prices will including any tarrifs that apply, which will adjust according to peak times and season as they are fetched from Eloverblik. This way you will get the actual price you pay per kWh. You can plot this on a dashboard, or use it in the Energy dashboard.
+
+To combine the the nordpool and eloverblik sensors, create the following template sensor:
+
+```
+template:
+  - sensor:
+    - name: "Electricity Cost"
+      unique_id: electricity_cost
+      device_class: monetary
+      unit_of_measurement: "kr/kWh"
+      state: >
+        {{ float(states('sensor.eloverblik_tariff_sum')) + float(states('sensor.nordpool')) }}
+      attributes:
+        today: >
+          {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool', 'today') %}
+            {% set ns = namespace (prices=[]) %}
+            {% for h in range(24) %}
+              {% set ns.prices = ns.prices + [(1.25 * float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'today')[h])) | round(5)] %}
+            {% endfor %}
+            {{ ns.prices }}
+          {% endif %}
+        tomorrow: >
+          {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool', 'tomorrow') %}
+            {% set ns = namespace (prices=[]) %}
+            {% for h in range(24) %}
+              {% set ns.prices = ns.prices + [(1.25 * float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'tomorrow')[h])) | round(5)] %}
+            {% endfor %}
+            {{ ns.prices }}
+          {% endif %}
+```
+
+Replace `nordpool` with the name of your Nordpool sensor.
