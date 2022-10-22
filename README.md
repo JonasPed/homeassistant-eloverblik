@@ -138,7 +138,7 @@ template:
       device_class: monetary
       unit_of_measurement: "kr/kWh"
       state: >
-        {{ float(states('sensor.eloverblik_tariff_sum')) + float(states('sensor.nordpool')) }}
+        {{ (1.25 * float(states('sensor.eloverblik_tariff_sum'))) + float(states('sensor.nordpool')) }}
       attributes:
         today: >
           {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool', 'today') %}
