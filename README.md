@@ -75,6 +75,7 @@ sensor:
     entity_id: sensor.eloverblik_energy_total
     name: Eloverblik Monthly Statistics
     sampling_size: 50
+    state_characteristic: mean
     max_age:
         days: 30
 
