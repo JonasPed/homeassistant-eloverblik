@@ -139,21 +139,21 @@ template:
       device_class: monetary
       unit_of_measurement: "kr/kWh"
       state: >
-        {{ (1.25 * float(states('sensor.eloverblik_tariff_sum'))) + float(states('sensor.nordpool')) }}
+        {{ 1.25 * (float(states('sensor.eloverblik_tariff_sum')) + float(states('sensor.nordpool_kwh_dk2_dkk_2_095_025'))) }}
       attributes:
         today: >
-          {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool', 'today') %}
+          {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool_kwh_dk2_dkk_2_095_025', 'today') %}
             {% set ns = namespace (prices=[]) %}
             {% for h in range(24) %}
-              {% set ns.prices = ns.prices + [(1.25 * float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'today')[h])) | round(5)] %}
+              {% set ns.prices = ns.prices + [(1.25 * (float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool_kwh_dk2_dkk_2_095_025', 'today')[h]))) | round(5)] %}
             {% endfor %}
             {{ ns.prices }}
           {% endif %}
         tomorrow: >
-          {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool', 'tomorrow') %}
+          {% if state_attr('sensor.eloverblik_tariff_sum', 'hourly') and state_attr('sensor.nordpool_kwh_dk2_dkk_2_095_025', 'tomorrow') %}
             {% set ns = namespace (prices=[]) %}
             {% for h in range(24) %}
-              {% set ns.prices = ns.prices + [(1.25 * float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool', 'tomorrow')[h])) | round(5)] %}
+              {% set ns.prices = ns.prices + [(1.25 * (float(state_attr('sensor.eloverblik_tariff_sum', 'hourly')[h]) + float(state_attr('sensor.nordpool_kwh_dk2_dkk_2_095_025', 'tomorrow')[h]))) | round(5)] %}
             {% endfor %}
             {{ ns.prices }}
           {% endif %}
