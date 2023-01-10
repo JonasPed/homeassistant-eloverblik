@@ -129,7 +129,7 @@ template:
 
 If you have the [Nordpool](https://github.com/custom-components/nordpool) installed you can calculate the current electricity price and forecast the price for today and tomorrow by the hour. These prices will including any tarrifs that apply, which will adjust according to peak times and season as they are fetched from Eloverblik. This way you will get the actual price you pay per kWh. You can plot this on a dashboard, or use it in the Energy dashboard.
 
-To combine the the nordpool and eloverblik sensors, create the following template sensor:
+To combine the the nordpool and eloverblik sensors, create below template sensor. Please note that the template assumes that your nordpool integration is configuerd to NOT include VAT.
 
 ```
 template:
