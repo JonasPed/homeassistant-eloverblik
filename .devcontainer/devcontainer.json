@@ -11,8 +11,11 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"updateContentCommand": "pip3 install --user -r requirements.txt"
+	// installs all requirements in requirements.txt and the components manifests.json
+	"updateContentCommand": {
+		"requirements": "pip3 install --user -r requirements.txt",
+		"component_requirements": "pip3 install --user $(cat custom_components/eloverblik/manifest.json | jq -r '.requirements|join(\" \")')"
+	}
 
 	// Configure tool-specific properties.
 	// "customizations": {},
