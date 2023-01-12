@@ -1,7 +1,7 @@
 {
   "domain": "eloverblik",
   "name": "Eloverblik",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/eloverblik",
   "requirements": [

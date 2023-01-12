@@ -108,23 +108,6 @@ cards:
 
 ```
 
-### Long term statistics / Energy dashboard
-
-The sensors does not support long term statistics or the energy dashboard out the box. The reason for this is that only sensors with measurements in present time should support this. This is described in official Home Assistant guide lines on [https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics](https://developers.home-assistant.io/docs/core/entity/sensor/#long-term-statistics).  Eloverblik sensor data is at least one or two days old and that can not be changed as this is what is delivered from eloverblik.dk. What would happen, if this was supported, is that statistics card or energy dashboard will show the data on the wrong date and most likely also show wrong data.
-
-If you insist on adding support for long term statistics you can create a template sensor like below. **You have been warned about data showing up on the wrong date and most likely the amount will also be wrong.**
-```
-template: 
-  - sensor: 
-    - name: "Eloverblik Long Term Statistics"
-      unit_of_measurement: kWh
-      state: "{{ states('sensor.eloverblik_energy_total') }}"
-      attributes: 
-        device_class: energy
-        state_class: measurement
-        last_reset: "{{ state_attr('sensor.eloverblik_energy_total', 'metering_date') }}"
-```
-
 ### Forecast total kWh price with Nordpool integration
 
 If you have the [Nordpool](https://github.com/custom-components/nordpool) installed you can calculate the current electricity price and forecast the price for today and tomorrow by the hour. These prices will including any tarrifs that apply, which will adjust according to peak times and season as they are fetched from Eloverblik. This way you will get the actual price you pay per kWh. You can plot this on a dashboard, or use it in the Energy dashboard.
@@ -160,3 +143,64 @@ template:
 ```
 
 Replace `nordpool` with the name of your Nordpool sensor.
+
+
+## Long term statistics and Energy dashboard
+
+The integration **now supports long-term statistics** and energy dashboard.
+
+The integration will pull current and last years data from Eloverblik and insert 
+it into the long-term statistics in HomeAssistant.
+
+An entity with the id `sensor.eloverblik_energy_statistic` is created, 
+this entity will **always** have an `unknown` value, since if a current value is set, 
+the recorder will try to write it to the statistics. 
+
+> **_NOTE:_**  This is not the ideal setup, but it does enable owners that do not have live access to their measurements to get the data into home-assitant.
+
+But the entity will have a valid long-term statistic.
+
+The statistic will continually be updateed daily.
+
+> **_NOTE:_**  The data will be between 1 and 3 days of delay, depending on your DSO.
+
+Below are two examples of UI yaml configuration to display the values.
+
+### Yesterdays consumption example:
+
+```yaml
+type: statistic
+name: Elforbrug i går
+entity: sensor.eloverblik_energy_statistic
+period:
+  calendar:
+    period: day
+    offset: -1
+stat_type: change
+icon: mdi:lightning-bolt
+```
+![Example in apexcharts](images/usage-example.png)
+
+#### Last weeks consumption 
+This is created with the help of [apexcharts](https://github.com/RomRider/apexcharts-card)
+```yaml
+type: custom:apexcharts-card
+graph_span: 7d
+header:
+  show: true
+  title: Sidste 7 dages elforbrug
+span:
+  end: day
+  offset: '-1d'
+series:
+  - entity: sensor.eloverblik_energy_statistic
+    type: column
+    statistics:
+      type: sum
+      period: hour
+    group_by:
+      func: diff
+      start_with_last: true
+      duration: 1d
+```
+![Example in apexcharts](images/apex-example.png)

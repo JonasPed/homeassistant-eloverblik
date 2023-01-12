@@ -1,28 +1,45 @@
 """Platform for Eloverblik sensor integration."""
-import datetime
+from datetime import datetime, timedelta
 import logging
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+import pytz
+from homeassistant.const import UnitOfEnergy
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.statistics import (
+    DOMAIN as RECORDER_DOMAIN,
+    async_import_statistics,
+    get_last_statistics,
+)
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMetaData
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.helpers.entity import Entity
-from pyeloverblik.eloverblik import Eloverblik
 from pyeloverblik.models import TimeSeries
-
-_LOGGER = logging.getLogger(__name__)
+from .__init__ import HassEloverblik
 from .const import DOMAIN, CURRENCY_KRONER_PER_KILO_WATT_HOUR
 
+_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry, async_add_entities):
     """Set up the sensor platform."""
     eloverblik = hass.data[DOMAIN][config.entry_id]
 
     sensors = []
     sensors.append(EloverblikEnergy("Eloverblik Energy Total", 'total', eloverblik))
     sensors.append(EloverblikEnergy("Eloverblik Energy Total (Year)", 'year_total', eloverblik))
-    for x in range(1, 25):
-        sensors.append(EloverblikEnergy(f"Eloverblik Energy {x-1}-{x}", 'hour', eloverblik, x))
+    for hour in range(1, 25):
+        sensors.append(EloverblikEnergy(f"Eloverblik Energy {hour-1}-{hour}", 'hour', eloverblik, hour))
     sensors.append(EloverblikTariff("Eloverblik Tariff Sum", eloverblik))
-    async_add_entities(sensors)
+    sensors.append(EloverblikStatistic(eloverblik))
 
+    async_add_entities(sensors)
 
 class EloverblikEnergy(Entity):
     """Representation of an energy sensor."""
@@ -66,19 +83,19 @@ class EloverblikEnergy(Entity):
         attributes = dict()
         attributes['Metering date'] = self._data_date
         attributes['metering_date'] = self._data_date
-        
+
         return attributes
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
+        return UnitOfEnergy.KILO_WATT_HOUR
 
     def update(self):
         """Fetch new state data for the sensor.
         This is the only method that should fetch new data for Home Assistant.
         """
-        self._data.update_energy()        
+        self._data.update_energy()
 
         self._data_date = self._data.get_data_date()
 
@@ -124,7 +141,7 @@ class EloverblikTariff(Entity):
         attributes = {
             "hourly": [self._data_hourly_tariff_sums[i] for i in range(24)]
         }
-        
+
         return attributes
 
     @property
@@ -136,7 +153,104 @@ class EloverblikTariff(Entity):
         """Fetch new state data for the sensor.
         This is the only method that should fetch new data for Home Assistant.
         """
-        self._data.update_tariffs()        
+        self._data.update_tariffs()
 
         self._data_hourly_tariff_sums = [self._data.get_tariff_sum_hour(h) for h in range(1, 25)]
-        self._state = self._data_hourly_tariff_sums[datetime.datetime.now().hour]
+        self._state = self._data_hourly_tariff_sums[datetime.now().hour]
+
+
+class EloverblikStatistic(SensorEntity):
+    """This class handles the total energy of the meter,
+    and imports it as long term statistics from Eloverblik."""
+
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL
+
+    def __init__(self, hass_eloverblik: HassEloverblik):
+        self._attr_name = "Eloverblik Energy Statistic"
+        self._attr_unique_id = f"{hass_eloverblik.get_metering_point()}-statistic"
+        self._hass_eloverblik = hass_eloverblik
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cleanup callback to remove statistics when deleting entity"""
+        await get_instance(self.hass).async_clear_statistics([self.entity_id])
+
+    async def async_update(self):
+        """Continually update history"""
+        last_stat = await self._get_last_stat(self.hass)
+
+        if last_stat is not None and pytz.utc.localize(datetime.now()) - last_stat["start"] < timedelta(days=1):
+            # If less than 1 day since last record, don't pull new data.
+            # Data is available at the earliest a day after.
+            return
+
+        if last_stat is None:
+            # if none import from last january
+            from_date = datetime(datetime.today().year-1, 1, 1)
+        else:
+            from_date = last_stat["start"] + timedelta(hours=1)
+        from_date = datetime(datetime.today().year-1, 1, 1)
+
+        data = await self.hass.async_add_executor_job(
+            self._hass_eloverblik.get_hourly_data,
+            from_date,
+            datetime.now())
+
+        if data is not None:
+            await self._insert_statistics(data, last_stat)
+        else:
+            _LOGGER.debug("None data was returned from Eloverblik")
+
+    async def _insert_statistics(
+        self,
+        data: dict[datetime, TimeSeries],
+        last_stat: StatisticData):
+
+        statistics : list[StatisticData] = []
+
+        if last_stat is not None:
+            total = last_stat["sum"]
+        else:
+            total = 0
+
+        # Sort time series to ensure correct insertion
+        sorted_time_series = sorted(data.values(), key = lambda timeseries : timeseries.data_date)
+
+        for time_series in sorted_time_series:
+            number_of_hours = len(time_series._metering_data)
+
+            # data_date returned is end of the time series
+            date = pytz.utc.localize(time_series.data_date) - timedelta(hours=number_of_hours)
+
+            for hour in range(0, number_of_hours):
+                start = date + timedelta(hours=hour)
+
+                total += time_series.get_metering_data(hour+1)
+
+                statistics.append(
+                    StatisticData(
+                        start=start,
+                        sum=total
+                    ))
+
+        metadata = StatisticMetaData(
+            name=self._attr_name,
+            source=RECORDER_DOMAIN,
+            statistic_id=self.entity_id,
+            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            has_mean=False,
+            has_sum=True,
+        )
+
+        async_import_statistics(self.hass, metadata, statistics)
+
+    async def _get_last_stat(self, hass: HomeAssistant) -> StatisticData:
+        last_stats = await get_instance(hass).async_add_executor_job(
+            get_last_statistics, hass, 1, self.entity_id, True, {"state"}
+        )
+
+        if self.entity_id in last_stats and len(last_stats[self.entity_id]) > 0:
+            return last_stats[self.entity_id][0]
+        else:
+            return None
