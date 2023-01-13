@@ -247,7 +247,7 @@ class EloverblikStatistic(SensorEntity):
 
     async def _get_last_stat(self, hass: HomeAssistant) -> StatisticData:
         last_stats = await get_instance(hass).async_add_executor_job(
-            get_last_statistics, hass, 1, self.entity_id, True, {"state"}
+            get_last_statistics, hass, 1, self.entity_id, True, {"sum"}
         )
 
         if self.entity_id in last_stats and len(last_stats[self.entity_id]) > 0:
