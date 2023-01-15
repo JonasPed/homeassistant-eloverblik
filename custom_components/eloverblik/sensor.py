@@ -20,9 +20,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from pyeloverblik.models import TimeSeries
-from .__init__ import HassEloverblik
+from .__init__ import HassEloverblik, MIN_TIME_BETWEEN_UPDATES
 from .const import DOMAIN, CURRENCY_KRONER_PER_KILO_WATT_HOUR
 
 _LOGGER = logging.getLogger(__name__)
@@ -176,6 +177,7 @@ class EloverblikStatistic(SensorEntity):
         """Cleanup callback to remove statistics when deleting entity"""
         await get_instance(self.hass).async_clear_statistics([self.entity_id])
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Continually update history"""
         last_stat = await self._get_last_stat(self.hass)
@@ -185,6 +187,9 @@ class EloverblikStatistic(SensorEntity):
             # Data is available at the earliest a day after.
             return
 
+        self.hass.async_create_task(self._update_data(last_stat))
+    
+    async def _update_data(self, last_stat: StatisticData):
         if last_stat is None:
             # if none import from last january
             from_date = datetime(datetime.today().year-1, 1, 1)
