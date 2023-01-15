@@ -190,7 +190,6 @@ class EloverblikStatistic(SensorEntity):
             from_date = datetime(datetime.today().year-1, 1, 1)
         else:
             from_date = last_stat["start"] + timedelta(hours=1)
-        from_date = datetime(datetime.today().year-1, 1, 1)
 
         data = await self.hass.async_add_executor_job(
             self._hass_eloverblik.get_hourly_data,
