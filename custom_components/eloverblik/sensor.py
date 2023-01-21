@@ -188,13 +188,14 @@ class EloverblikStatistic(SensorEntity):
             return
 
         self.hass.async_create_task(self._update_data(last_stat))
-    
+
     async def _update_data(self, last_stat: StatisticData):
         if last_stat is None:
             # if none import from last january
             from_date = datetime(datetime.today().year-1, 1, 1)
         else:
-            from_date = last_stat["start"] + timedelta(hours=1)
+            # Next day at noon (eloverblik.py will strip time)
+            from_date = last_stat["start"] + timedelta(hours=13)
 
         data = await self.hass.async_add_executor_job(
             self._hass_eloverblik.get_hourly_data,
