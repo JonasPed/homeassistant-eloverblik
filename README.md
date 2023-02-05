@@ -162,7 +162,7 @@ But the entity will have a valid long-term statistic.
 
 The statistic will continually be updateed daily.
 
-> **_NOTE:_**  The data will be between 1 and 3 days of delay, depending on your DSO.
+> **_NOTE:_**  The data will be delayed between 1 and 3 days, depending on your local grid operator (DSO).
 
 Below are two examples of UI yaml configuration to display the values.
 
