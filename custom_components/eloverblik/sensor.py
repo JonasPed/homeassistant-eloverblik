@@ -223,21 +223,22 @@ class EloverblikStatistic(SensorEntity):
         sorted_time_series = sorted(data.values(), key = lambda timeseries : timeseries.data_date)
 
         for time_series in sorted_time_series:
-            number_of_hours = len(time_series._metering_data)
+            if time_series._metering_data is not None:
+                number_of_hours = len(time_series._metering_data)
 
-            # data_date returned is end of the time series
-            date = pytz.utc.localize(time_series.data_date) - timedelta(hours=number_of_hours)
+                # data_date returned is end of the time series
+                date = pytz.utc.localize(time_series.data_date) - timedelta(hours=number_of_hours)
 
-            for hour in range(0, number_of_hours):
-                start = date + timedelta(hours=hour)
+                for hour in range(0, number_of_hours):
+                    start = date + timedelta(hours=hour)
 
-                total += time_series.get_metering_data(hour+1)
+                    total += time_series.get_metering_data(hour+1)
 
-                statistics.append(
-                    StatisticData(
-                        start=start,
-                        sum=total
-                    ))
+                    statistics.append(
+                        StatisticData(
+                            start=start,
+                            sum=total
+                        ))
 
         metadata = StatisticMetaData(
             name=self._attr_name,
@@ -248,7 +249,8 @@ class EloverblikStatistic(SensorEntity):
             has_sum=True,
         )
 
-        async_import_statistics(self.hass, metadata, statistics)
+        if len(statistics) > 0:
+            async_import_statistics(self.hass, metadata, statistics)
 
     async def _get_last_stat(self, hass: HomeAssistant) -> StatisticData:
         last_stats = await get_instance(hass).async_add_executor_job(
