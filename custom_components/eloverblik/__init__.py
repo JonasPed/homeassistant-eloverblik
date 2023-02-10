@@ -2,22 +2,19 @@
 import asyncio
 import logging
 import sys
-
+import json
+from datetime import timedelta, datetime
+import requests
 import voluptuous as vol
 from homeassistant.util import Throttle
-from datetime import timedelta, date
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
+from pyeloverblik.models import TimeSeries
 from pyeloverblik.eloverblik import Eloverblik
 
 from .const import DOMAIN
 
-import requests
-
 _LOGGER = logging.getLogger(__name__)
-
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -93,6 +90,31 @@ class HassEloverblik:
                 return 0
         else:
             return None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def get_hourly_data(self, from_date: datetime, to_date: datetime) -> dict[datetime, TimeSeries]:
+        """Used to get hourly data for a meter between two dates."""
+
+        try:
+            raw_data = self._client.get_time_series(self._metering_point, from_date, to_date)
+            if raw_data.status == 200:
+                json_response = json.loads(raw_data.body)
+                parsed = self._client._parse_result(json_response)
+                return parsed
+            else:
+                _LOGGER.warn(f"Error from eloverblik while getting historic data: {raw_data.status} - {raw_data.body}")
+        except requests.exceptions.HTTPError as he:
+            message = None
+            if he.response.status_code == 401:
+                message = f"Unauthorized error while accessing eloverblik.dk. Wrong or expired refresh token?"
+            else:
+                e = sys.exc_info()[1]
+                message = f"Exception: {e}"
+
+            _LOGGER.warn(message)
+        except: 
+            e = sys.exc_info()[1]
+            _LOGGER.warn(f"Exception: {e}")
 
     def get_data_date(self):
         if self._day_data != None:
