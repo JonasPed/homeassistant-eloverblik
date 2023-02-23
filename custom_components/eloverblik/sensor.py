@@ -141,7 +141,7 @@ class MeterReading(Entity):
     def extra_state_attributes(self):
         """Return state attributes."""
         attributes = dict()
-        attributes['metering_reading_date'] = self._data_date
+        attributes['meter_reading_date'] = self._data_date
         
         return attributes
 
