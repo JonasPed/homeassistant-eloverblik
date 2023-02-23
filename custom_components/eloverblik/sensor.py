@@ -148,7 +148,7 @@ class MeterReading(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
+        return UnitOfEnergy.KILO_WATT_HOUR
 
     def update(self):
         """Fetch new state data for the sensor.
