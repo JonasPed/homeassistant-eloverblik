@@ -35,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry, async_add_
     sensors = []
     sensors.append(EloverblikEnergy("Eloverblik Energy Total", 'total', eloverblik))
     sensors.append(EloverblikEnergy("Eloverblik Energy Total (Year)", 'year_total', eloverblik))
+    sensors.append(MeterReading("Eloverblik Meter Reading", eloverblik))
     for hour in range(1, 25):
         sensors.append(EloverblikEnergy(f"Eloverblik Energy {hour-1}-{hour}", 'hour', eloverblik, hour))
     sensors.append(EloverblikTariff("Eloverblik Tariff Sum", eloverblik))
@@ -109,6 +110,54 @@ class EloverblikEnergy(Entity):
         else:
             raise ValueError(f"Unexpected sensor_type: {self._sensor_type}.")
 
+class MeterReading(Entity):
+    """Representation of a meter reading sensor."""
+
+    def __init__(self, name, client):
+        """Initialize the sensor."""
+        self._state = None
+        self._data_date = None
+        self._data = client
+        self._name = name
+
+        self._unique_id = f"{self._data.get_metering_point()}-meter-reading"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """The unique id of the sensor."""
+        return self._unique_id
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def extra_state_attributes(self):
+        """Return state attributes."""
+        attributes = dict()
+        attributes['metering_reading_date'] = self._data_date
+        
+        return attributes
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return ENERGY_KILO_WATT_HOUR
+
+    def update(self):
+        """Fetch new state data for the sensor.
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        self._data.update_meter_reading()       
+
+        self._data_date = self._data.meter_reading_date()
+        self._state = self._data.meter_reading()
 
 class EloverblikTariff(Entity):
     """Representation of an energy sensor."""

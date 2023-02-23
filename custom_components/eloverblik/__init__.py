@@ -67,6 +67,7 @@ class HassEloverblik:
         self._day_data = None
         self._year_data = None
         self._tariff_data = None
+        self._meter_reading_data = None
 
     def get_total_day(self):
         if self._day_data != None:
@@ -141,6 +142,18 @@ class HassEloverblik:
 
         else:
             return None
+        
+    def meter_reading_date(self):
+        if self._meter_reading_data != None:
+            return self._meter_reading_data.reading_date
+        else:
+            return None
+    
+    def meter_reading(self):
+        if self._meter_reading_data != None:
+            return self._meter_reading_data.reading
+        else:
+            return None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update_energy(self):
@@ -197,3 +210,28 @@ class HassEloverblik:
             _LOGGER.warn(f"Exception: {e}")
 
         _LOGGER.debug("Done fetching tariff data from Eloverblik")
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_meter_reading(self):
+        _LOGGER.debug("Fetching meter reading data from Eloverblik")
+
+        try: 
+            meter_reading_data = self._client.get_meter_reading_latest(self._metering_point)
+            if meter_reading_data.status == 200:
+                self._meter_reading_data = meter_reading_data
+            else:
+                _LOGGER.warn(f"Error from eloverblik when getting meter rading data: {meter_reading_data.status} - {meter_reading_data.detailed_status}")
+        except requests.exceptions.HTTPError as he:
+            message = None
+            if he.response.status_code == 401:
+                message = f"Unauthorized error while accessing eloverblik.dk. Wrong or expired refresh token?"
+            else:
+                e = sys.exc_info()[1]
+                message = f"Exception: {e}"
+
+            _LOGGER.warn(message)
+        except: 
+            e = sys.exc_info()[1]
+            _LOGGER.warn(f"Exception: {e}")
+
+        _LOGGER.debug("Done fetching meter reading data from Eloverblik")
