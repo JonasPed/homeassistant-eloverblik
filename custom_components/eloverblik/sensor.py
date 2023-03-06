@@ -231,7 +231,7 @@ class EloverblikStatistic(SensorEntity):
         """Continually update history"""
         last_stat = await self._get_last_stat(self.hass)
 
-        if last_stat is not None and pytz.utc.localize(datetime.now()) - last_stat["start"] < timedelta(days=1):
+        if last_stat is not None and pytz.utc.localize(datetime.now()) - pytz.utc.localize(datetime.utcfromtimestamp(last_stat["start"])) < timedelta(days=1):
             # If less than 1 day since last record, don't pull new data.
             # Data is available at the earliest a day after.
             return
