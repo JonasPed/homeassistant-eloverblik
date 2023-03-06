@@ -220,7 +220,7 @@ class HassEloverblik:
             if meter_reading_data.status == 200:
                 self._meter_reading_data = meter_reading_data
             else:
-                _LOGGER.warn(f"Error from eloverblik when getting meter rading data: {meter_reading_data.status} - {meter_reading_data.detailed_status}")
+                _LOGGER.info(f"Error from eloverblik when getting meter reading data: {meter_reading_data.status} - {meter_reading_data.detailed_status}. This is not a bug. Just an indication that data is not available in Eloverblik.dk.")
         except requests.exceptions.HTTPError as he:
             message = None
             if he.response.status_code == 401:
