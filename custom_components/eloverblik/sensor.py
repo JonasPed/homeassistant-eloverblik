@@ -244,7 +244,7 @@ class EloverblikStatistic(SensorEntity):
             from_date = datetime(datetime.today().year-1, 1, 1)
         else:
             # Next day at noon (eloverblik.py will strip time)
-            from_date = last_stat["start"] + timedelta(hours=13)
+            from_date = pytz.utc.localize(datetime.utcfromtimestamp(last_stat["start"]) + timedelta(hours=13))
 
         data = await self.hass.async_add_executor_job(
             self._hass_eloverblik.get_hourly_data,
