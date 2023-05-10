@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "refresh_token": "Opdateringstoken",
+                    "metering_point": "MålepunktsID"
+                },
+                "title": "Indsæt opdateringstoken og målepunktsID"
+            }
+        },
+        "title": "Eloverblik"
+    }
+}
