@@ -3,7 +3,8 @@
   "name": "Eloverblik",
   "version": "0.2.0",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/eloverblik",
+  "documentation": "https://github.com/JonasPed/homeassistant-eloverblik",
+  "issue_tracker": "https://github.com/JonasPed/homeassistant-eloverblik/issues",
   "requirements": [
     "pyeloverblik==0.4.1"
   ],
