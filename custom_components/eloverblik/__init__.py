@@ -36,10 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     
     hass.data[DOMAIN][entry.entry_id] = HassEloverblik(refresh_token, metering_point)
 
-    for component in PLATFORMS:
-        await hass.async_create_task(
-            hass.config_entries.async_forward_entry_setups(entry, component)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
