@@ -6,7 +6,7 @@
   "documentation": "https://github.com/JonasPed/homeassistant-eloverblik",
   "issue_tracker": "https://github.com/JonasPed/homeassistant-eloverblik/issues",
   "requirements": [
-    "pyeloverblik==0.4.1"
+    "pyeloverblik==0.4.2"
   ],
   "ssdp": [],
   "zeroconf": [],
