@@ -276,7 +276,7 @@ class EloverblikStatistic(SensorEntity):
                 number_of_hours = len(time_series._metering_data)
 
                 # data_date returned is end of the time series
-                date = pytz.utc.localize(time_series.data_date) - timedelta(hours=number_of_hours)
+                date = time_series.data_date - timedelta(hours=number_of_hours)
 
                 for hour in range(0, number_of_hours):
                     start = date + timedelta(hours=hour)
