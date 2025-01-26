@@ -4,7 +4,12 @@
 
 The `eloverblik` component is a Home Assistant custom component for monitoring your electricity data from [eloverblik.dk](https://eloverblik.dk).
 
-*The custom component is in its very early stage for showing data from eloverblik.dk.*
+** Important information **
+I no longer actively develop this component. There are mainly two reasons for that. 
+1. Eloverblik API is know for being unstable and slow. There is nothing I can do about that.
+2. I no longer actively use this integration my self.
+
+PR's are still welcome and will get reviewed and merged!
 
 ## Installation
 
