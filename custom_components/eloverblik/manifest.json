@@ -1,12 +1,12 @@
 {
   "domain": "eloverblik",
   "name": "Eloverblik",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "config_flow": true,
   "documentation": "https://github.com/JonasPed/homeassistant-eloverblik",
   "issue_tracker": "https://github.com/JonasPed/homeassistant-eloverblik/issues",
   "requirements": [
-    "pyeloverblik==0.4.2"
+    "pyeloverblik==0.4.4"
   ],
   "ssdp": [],
   "zeroconf": [],
