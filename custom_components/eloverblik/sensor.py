@@ -8,6 +8,7 @@ from homeassistant.components.recorder.statistics import (
     DOMAIN as RECORDER_DOMAIN,
     async_import_statistics,
     get_last_statistics,
+    statistics_during_period,
 )
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -30,6 +31,11 @@ from .const import DOMAIN, CURRENCY_KRONER_PER_KILO_WATT_HOUR
 
 _LOGGER = logging.getLogger(__name__)
 
+# Home Assistant cannot calculate dynamic prices for imported long-term
+# statistics.  Keep the price source explicit for this installation and
+# import a separate cumulative monetary statistic instead.
+PRICE_STATISTIC_ID = "sensor.electricity_cost"
+
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry, async_add_entities):
     """Set up the sensor platform."""
     eloverblik = hass.data[DOMAIN][config.entry_id]
@@ -45,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry, async_add_
 
     async_add_entities(sensors)
 
-class EloverblikEnergy(Entity):
+class EloverblikEnergy(SensorEntity):
     """Representation of an energy sensor."""
 
     def __init__(self, name, sensor_type, client, hour=None):
@@ -66,6 +72,14 @@ class EloverblikEnergy(Entity):
         else:
             raise ValueError(f"Unexpected sensor_type: {sensor_type}.")
 
+        self._attr_device_class = SensorDeviceClass.ENERGY
+        self._attr_state_class = (
+            SensorStateClass.TOTAL_INCREASING
+            if sensor_type == "year_total"
+            else SensorStateClass.MEASUREMENT
+        )
+        self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -79,6 +93,11 @@ class EloverblikEnergy(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def native_value(self):
+        """Return the native sensor value."""
         return self._state
 
     @property
@@ -236,6 +255,7 @@ class EloverblikStatistic(SensorEntity):
         if last_stat is not None and pytz.utc.localize(datetime.now()) - pytz.utc.localize(datetime.utcfromtimestamp(last_stat["start"])) < timedelta(days=1):
             # If less than 1 day since last record, don't pull new data.
             # Data is available at the earliest a day after.
+            await self._insert_cost_statistics_from_recorder()
             return
 
         self.hass.async_create_task(self._update_data(last_stat))
@@ -257,6 +277,8 @@ class EloverblikStatistic(SensorEntity):
             await self._insert_statistics(data, last_stat)
         else:
             _LOGGER.debug("None data was returned from Eloverblik")
+
+        await self._insert_cost_statistics_from_recorder()
 
     async def _insert_statistics(
         self,
@@ -303,6 +325,107 @@ class EloverblikStatistic(SensorEntity):
 
         if len(statistics) > 0:
             async_import_statistics(self.hass, metadata, statistics)
+
+    async def _insert_cost_statistics_from_recorder(self):
+        """Import cumulative hourly cost statistics from recorded prices."""
+        cost_statistic_id = f"{self.entity_id}_cost"
+        last_cost_stat = await self._get_last_statistics(cost_statistic_id)
+
+        rows = await self.hass.async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            datetime(2000, 1, 1, tzinfo=pytz.UTC),
+            datetime.now(pytz.UTC),
+            {self.entity_id, PRICE_STATISTIC_ID},
+            "hour",
+            None,
+            {"mean", "sum"},
+        )
+        price_rows = rows.get(PRICE_STATISTIC_ID, [])
+        prices = {
+            int(self._row_value(row, "start")): self._row_value(row, "mean")
+            for row in price_rows
+            if self._row_value(row, "mean") is not None
+        }
+
+        if not prices:
+            _LOGGER.warning(
+                "No historical price statistics found for %s",
+                PRICE_STATISTIC_ID,
+            )
+            return
+
+        energy_rows = rows.get(self.entity_id, [])
+        previous_energy = None
+        total_cost = last_cost_stat["sum"] if last_cost_stat else 0.0
+        cost_statistics: list[StatisticData] = []
+
+        for row in energy_rows:
+            row_sum = self._row_value(row, "sum")
+            row_start = self._row_value(row, "start")
+            if row_sum is None:
+                continue
+
+            if previous_energy is None:
+                previous_energy = row_sum
+                continue
+
+            if last_cost_stat and row_start <= last_cost_stat["start"]:
+                previous_energy = row_sum
+                continue
+
+            price = prices.get(int(row_start))
+            if price is not None:
+                energy_delta = max(0.0, row_sum - previous_energy)
+                cost_delta = energy_delta * price
+                total_cost += cost_delta
+                cost_statistics.append(
+                    StatisticData(
+                        start=datetime.fromtimestamp(row_start, tz=pytz.UTC),
+                        state=cost_delta,
+                        sum=total_cost,
+                    )
+                )
+
+            previous_energy = row_sum
+
+        if not cost_statistics:
+            _LOGGER.warning(
+                "No overlapping Eloverblik energy and price statistics found"
+            )
+            return
+
+        metadata = StatisticMetaData(
+            name=f"{self._attr_name} Cost",
+            source=RECORDER_DOMAIN,
+            statistic_id=cost_statistic_id,
+            unit_of_measurement="DKK",
+            unit_class=None,
+            mean_type=StatisticMeanType.NONE,
+            has_sum=True,
+        )
+        async_import_statistics(self.hass, metadata, cost_statistics)
+
+    @staticmethod
+    def _row_value(row, key):
+        """Read statistics rows from old and current Home Assistant APIs."""
+        if isinstance(row, dict):
+            return row.get(key)
+        return getattr(row, key)
+
+    async def _get_last_statistics(self, statistic_id: str) -> StatisticData | None:
+        """Return the latest sum for an imported statistic."""
+        last_stats = await get_instance(self.hass).async_add_executor_job(
+            get_last_statistics,
+            self.hass,
+            1,
+            statistic_id,
+            True,
+            {"sum"},
+        )
+        if statistic_id in last_stats and last_stats[statistic_id]:
+            return last_stats[statistic_id][0]
+        return None
 
     async def _get_last_stat(self, hass: HomeAssistant) -> StatisticData:
         last_stats = await get_instance(hass).async_add_executor_job(
